@@ -1,3 +1,1 @@
-const functions = require('firebase-functions');
-
-exports.events = require('./events');
+export * from './events';

@@ -1,5 +1,6 @@
 import * as functions from 'firebase-functions';
 import { firestore } from 'firebase-admin';
+import { event } from 'firebase-functions/lib/providers/analytics';
 
 export const calc = functions.https.onCall((data, context) => {
   return { sum: data.a + data.b };
@@ -20,8 +21,11 @@ export const attendEvent = functions.https.onCall(async (data, context) => {
     if (!attendingDoc.exists) {
       const batch = firestore().batch();
 
+      // eventDate arrives JSON serialized - we need to convert it to firebase timestamp
+      const eventTimestamp = new firestore.Timestamp(eventDate._seconds, eventDate._nanoseconds);
+
       // Create a user attending document
-      batch.set(attendingRef, { eventDate, attendedAt: firestore.FieldValue.serverTimestamp() });
+      batch.set(attendingRef, { eventDate: eventTimestamp, attendedAt: firestore.FieldValue.serverTimestamp() });
 
       // Increase the event attending counter
       const eventRef = firestore().collection('events').doc(eventId);

@@ -1,10 +1,5 @@
 import * as functions from 'firebase-functions';
 import { firestore } from 'firebase-admin';
-import { event } from 'firebase-functions/lib/providers/analytics';
-
-export const calc = functions.https.onCall((data, context) => {
-  return { sum: data.a + data.b };
-});
 
 export const attendEvent = functions.https.onCall(async (data, context) => {
   try {

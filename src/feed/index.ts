@@ -13,25 +13,30 @@ export const likePost = functions.https.onCall(async (data, context) => {
     const { uid: userId } = context.auth;
     const { postId } = data;
 
-    const likeRef = firestore().collection(`posts/${postId}/likes`).doc(userId);
-    const likeDoc = await likeRef.get();
-
-    if (likeDoc.exists) {
-      throw new functions.https.HttpsError('already-exists', 'Already liked post.');
-    }
-
     const postRef = firestore().collection('posts').doc(postId);
-    const userRef = firestore().collection(`users/${userId}/likes`).doc(postId);
+    const postLikeRef = firestore().collection(`posts/${postId}/likes`).doc(userId);
+    const userPostLikeRef = firestore().collection(`users/${userId}/likes`).doc(postId);
 
-    const batch = firestore().batch();
-    batch.update(postRef, { likeCounter: firestore.FieldValue.increment(1) });
-    batch.set(likeRef, { createdAt: firestore.FieldValue.serverTimestamp() });
-    // Add the post content here:
-    batch.set(userRef, { createdAt: firestore.FieldValue.serverTimestamp() });
+    await firestore().runTransaction(async (transaction) => {
+      const postDoc = await transaction.get(postRef);
+      const postLikeDoc = await transaction.get(postLikeRef);
 
-    await batch.commit();
+      if (!postDoc.exists) {
+        throw new functions.https.HttpsError('not-found', 'Post does not exist.');
+      }
 
-    return { ok: true };
+      if (postLikeDoc.exists) {
+        throw new functions.https.HttpsError('invalid-argument', 'The user has already liked the post.');
+      }
+
+      const postData = postDoc.data()!;
+      const likeCounter = postData.likeCounter + 1;
+      await transaction.update(postRef, { likeCounter });
+      await transaction.set(postLikeRef, { createdAt: firestore.FieldValue.serverTimestamp() });
+      await transaction.set(userPostLikeRef, { createdAt: firestore.FieldValue.serverTimestamp() });
+    });
+
+    return { ok: true, action: 'like' };
   } catch (err) {
     throw new functions.https.HttpsError('not-found', err.message);
   }
@@ -49,24 +54,30 @@ export const unlikePost = functions.https.onCall(async (data, context) => {
     const { uid: userId } = context.auth;
     const { postId } = data;
 
-    const likeRef = firestore().collection(`posts/${postId}/likes`).doc(userId);
-    const likeDoc = await likeRef.get();
-
-    if (!likeDoc.exists) {
-      throw new functions.https.HttpsError('not-found', 'Like document does not exist.');
-    }
-
     const postRef = firestore().collection('posts').doc(postId);
-    const userLikeRef = firestore().collection(`users/${userId}/likes`).doc(postId);
+    const postLikeRef = firestore().collection(`posts/${postId}/likes`).doc(userId);
+    const userPostLikeRef = firestore().collection(`users/${userId}/likes`).doc(postId);
 
-    const batch = firestore().batch();
-    batch.update(postRef, { likeCounter: firestore.FieldValue.increment(-1) });
-    batch.delete(likeRef);
-    batch.delete(userLikeRef);
+    await firestore().runTransaction(async (transaction) => {
+      const postDoc = await transaction.get(postRef);
+      const postLikeDoc = await transaction.get(postLikeRef);
 
-    await batch.commit();
+      if (!postDoc.exists) {
+        throw new functions.https.HttpsError('not-found', 'Post does not exist.');
+      }
 
-    return { ok: true };
+      if (!postLikeDoc.exists) {
+        throw new functions.https.HttpsError('invalid-argument', 'User like does not exist.');
+      }
+
+      const postData = postDoc.data()!;
+      const likeCounter = postData.likeCounter - 1;
+      await transaction.update(postRef, { likeCounter });
+      await transaction.delete(postLikeRef);
+      await transaction.delete(userPostLikeRef);
+    });
+
+    return { updated: true, action: 'unlike' };
   } catch (err) {
     throw new functions.https.HttpsError('not-found', err.message);
   }

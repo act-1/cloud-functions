@@ -7,20 +7,22 @@ export const attendEvent = functions.https.onCall(async (data, context) => {
     if (!data.eventId) throw new functions.https.HttpsError('invalid-argument', 'Missing Event ID.');
     if (!data.eventDate) throw new functions.https.HttpsError('invalid-argument', 'Missing Event ID.');
 
-    const { uid } = context.auth;
+    const { uid: userId } = context.auth;
     const { eventId, eventDate } = data;
 
-    const attendingRef = await firestore().collection('users').doc(uid).collection('attendingEvents').doc(eventId);
-    const attendingDoc = await attendingRef.get();
+    const eventAttendRef = await firestore().collection('events').doc(eventId).collection('attending').doc(userId);
+    const userAttendRef = await firestore().collection('users').doc(userId).collection('attendingEvents').doc(eventId);
+    const userAttendDoc = await userAttendRef.get();
 
-    if (!attendingDoc.exists) {
+    if (!userAttendDoc.exists) {
       const batch = firestore().batch();
 
       // eventDate arrives JSON serialized - we need to convert it to firebase timestamp
-      const eventTimestamp = new firestore.Timestamp(eventDate._seconds, eventDate._nanoseconds);
+      const eventTimestamp = new firestore.Timestamp(eventDate.seconds, eventDate.nanoseconds);
 
       // Create a user attending document
-      batch.set(attendingRef, { eventDate: eventTimestamp, attendedAt: firestore.FieldValue.serverTimestamp() });
+      batch.set(eventAttendRef, { attendedAt: firestore.FieldValue.serverTimestamp() });
+      batch.set(userAttendRef, { eventDate: eventTimestamp, attendedAt: firestore.FieldValue.serverTimestamp() });
 
       // Increase the event attending counter
       const eventRef = firestore().collection('events').doc(eventId);
@@ -43,19 +45,21 @@ export const unattendEvent = functions.https.onCall(async (data, context) => {
     if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Not authenticated.');
     if (!data.eventId) throw new functions.https.HttpsError('invalid-argument', 'Missing Event ID.');
 
-    const { uid } = context.auth;
+    const { uid: userId } = context.auth;
     const { eventId } = data;
 
-    const attendingRef = await firestore().collection('users').doc(uid).collection('attendingEvents').doc(eventId);
-    const attendingDoc = await attendingRef.get();
+    const eventAttendRef = await firestore().collection('events').doc(eventId).collection('attending').doc(userId);
+    const userAttendRef = await firestore().collection('users').doc(userId).collection('attendingEvents').doc(eventId);
+    const userAttendDoc = await userAttendRef.get();
 
-    if (attendingDoc.exists) {
+    if (userAttendDoc.exists) {
       const batch = firestore().batch();
 
       // Create a user attending document
-      batch.delete(attendingRef);
+      batch.delete(eventAttendRef);
+      batch.delete(userAttendRef);
 
-      // Increase the event attending counter
+      // Decrease the event attending counter
       const eventRef = firestore().collection('events').doc(eventId);
       batch.update(eventRef, { attendingCount: firestore.FieldValue.increment(-1) });
 

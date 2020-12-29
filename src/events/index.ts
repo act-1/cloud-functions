@@ -21,7 +21,7 @@ export const attendEvent = functions.https.onCall(async (data, context) => {
       const eventTimestamp = new firestore.Timestamp(eventDate.seconds, eventDate.nanoseconds);
 
       // Create a user attending document
-      batch.set(eventAttendRef, { attendedAt: firestore.FieldValue.serverTimestamp() });
+      batch.set(eventAttendRef, { notifications: true, attendedAt: firestore.FieldValue.serverTimestamp() });
       batch.set(userAttendRef, { eventDate: eventTimestamp, attendedAt: firestore.FieldValue.serverTimestamp() });
 
       // Increase the event attending counter

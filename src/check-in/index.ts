@@ -1,5 +1,5 @@
 import * as functions from 'firebase-functions';
-import { firestore } from 'firebase-admin';
+import { firestore, database } from 'firebase-admin';
 
 export const userCheckIn = functions.https.onCall(async (data, context) => {
   try {
@@ -35,12 +35,12 @@ export const userCheckIn = functions.https.onCall(async (data, context) => {
     if (eventId) {
       eventRef = firestore().collection('events').doc(eventId);
       const eventDoc = await eventRef.get();
-      if (!eventDoc.exists) throw 'The event does not exist.';
+      if (!eventDoc.exists) throw new functions.https.HttpsError('not-found', 'The event does not exist.');
       expireAt = eventDoc.data().endTime;
     }
 
     const location = await firestore().collection('locations').doc(locationId).get();
-    if (!location.exists) throw 'The location does not exist.';
+    if (!location.exists) throw new functions.https.HttpsError('not-found', 'The location does not exist.');
     const locationDoc = location.data();
 
     const checkInInfo = {
@@ -68,11 +68,61 @@ export const userCheckIn = functions.https.onCall(async (data, context) => {
       batch.set(eventCheckInRef, { ...checkInInfo, id: checkInRef.id });
     }
 
+    // Increment the location counter in the realtime database.
+    database().ref(`locationCounter/${locationId}`).set(database.ServerValue.increment(1));
+
     await batch.commit();
 
     return { ok: true };
     // Increment check in realtime database counter
   } catch (err) {
-    throw new functions.https.HttpsError('not-found', err.message);
+    throw err;
+  }
+});
+
+/**
+ * Retrieves all expired check ins, updates their isActive property and decrements their location.
+ */
+exports.updateCheckInCount = functions.pubsub.schedule('every 30 minutes').onRun(async (context) => {
+  try {
+    const expiredCheckInsSnapshot = await firestore().collection('checkIns').where('expiresAt', '<=', new Date()).get();
+
+    let checkInLocations = {};
+
+    // Create an object which contains the locationIds and their respective check ins.
+    expiredCheckInsSnapshot.docs.forEach((checkIn) => {
+      const { locationId, userId } = checkIn.data();
+      if (!checkInLocations[locationId]) {
+        checkInLocations[locationId] = [{ checkInId: checkIn.id, userId }];
+      } else {
+        checkInLocations[locationId].push({ checkInId: checkIn.id, userId });
+      }
+    });
+
+    let documentCount = 0;
+
+    const locationIds = Object.keys(checkInLocations);
+
+    for (let i = 0; i < locationIds.length; i++) {
+      const locationId = locationIds[i];
+      const locationCheckIns = checkInLocations[locationId];
+
+      // Batch commits are limited to 500 document writes.
+      documentCount += locationCheckIns.length * 2;
+      if (documentCount >= 500) return;
+
+      const batch = firestore().batch();
+      // Iterate over the location check ins.
+      locationCheckIns.forEach((checkIn) => {
+        const { checkInId, userId } = checkIn;
+        const userCheckInRef = firestore().collection(`checkIns`).doc(checkInId);
+        const userCheckInRef = firestore().collection(`users/${userId}`).doc(checkInId);
+        batch.update;
+      });
+    }
+
+    await batch.commit();
+  } catch (err) {
+    throw err;
   }
 });

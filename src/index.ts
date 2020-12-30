@@ -4,4 +4,5 @@ admin.initializeApp({ credential: admin.credential.applicationDefault(), project
 
 export * from './user';
 export * from './events';
+export * from './check-in';
 export * from './feed';

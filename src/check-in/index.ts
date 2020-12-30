@@ -6,6 +6,7 @@ export const userCheckIn = functions.https.onCall(async (data, context) => {
   if (!data.locationId) throw new functions.https.HttpsError('invalid-argument', 'Missing location ID.');
 
   const { uid: userId } = context.auth;
+  const { locationId, eventId } = context.data;
 
   // Check if the user doesn't have an active check in
   const lastCheckInSnapshot = await firestore()
@@ -22,12 +23,17 @@ export const userCheckIn = functions.https.onCall(async (data, context) => {
     }
   }
 
-  // const lastUserCheckInDoc = await lastUserCheckInRef.get();
-  // if (lastUserCheckInDoc.)
-  // if ()
+  // 1.5 Hours from now - the default check in expiration time.
+  let expireTime = new Date();
+  expireTime.setTime(expireTime.getTime() + 1.5 * 60 * 60 * 1000);
 
-  // check if eventId was supplied
-  // check the end time of the event, and set it as the check in timeout
+  // Check if the user checks in to an event.
+  // If they does, set the expiration time to the event end time.
+  if (eventId) {
+    const eventDoc = await firestore().collection('events').doc(eventId).get();
+    if (!eventDoc.exists) throw 'The event does not exist.';
+    expireTime = eventDoc.data().endTime;
+  }
 
   // add the check in to firestore:
   // userId, userInfo, locationId, locationInfo, eventId

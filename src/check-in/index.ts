@@ -61,7 +61,7 @@ export const userCheckIn = functions.https.onCall(async (data, context) => {
     await batch.commit();
 
     // Increment the location counter in the realtime database.
-    database().ref(`locationCounter/${locationId}`).set(database.ServerValue.increment(1));
+    await database().ref(`locationCounter/${locationId}`).set(database.ServerValue.increment(1));
 
     return { ok: true };
     // Increment check in realtime database counter.

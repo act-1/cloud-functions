@@ -64,7 +64,7 @@ export const userCheckIn = functions.https.onCall(async (data, context) => {
     database().ref(`locationCounter/${locationId}`).set(database.ServerValue.increment(1));
 
     return { ok: true };
-    // Increment check in realtime database counter
+    // Increment check in realtime database counter.
   } catch (err) {
     throw err;
   }

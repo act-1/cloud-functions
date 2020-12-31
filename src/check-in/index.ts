@@ -21,7 +21,7 @@ export const userCheckIn = functions.https.onCall(async (data, context) => {
     // If no documents were received, it means this is the first time the user's checking in and we can avoid this check.
     if (checkInDocs.length === 1) {
       if (checkInDocs[0].data().isActive) {
-        throw 'The user has an active check in session.';
+        throw new functions.https.HttpsError('already-exists', 'The user has an active check in session.');
       }
     }
 
@@ -80,6 +80,7 @@ async function updateCheckInCount() {
       .where('expireAt', '<=', new Date())
       .where('isActive', '==', true)
       .get();
+
     let checkInLocations = {};
 
     // Create an object which contains the locationIds and their respective check ins.

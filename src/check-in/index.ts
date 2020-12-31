@@ -102,16 +102,17 @@ exports.updateCheckInCount = functions.pubsub.schedule('every 30 minutes').onRun
       if (documentCount >= 500) return;
 
       const batch = firestore().batch();
+
       // Iterate over the location check ins.
       locationCheckIns.forEach((checkIn) => {
         const { checkInId, userId } = checkIn;
-        const userCheckInRef = firestore().collection(`checkIns`).doc(checkInId);
+        const checkInRef = firestore().collection(`checkIns`).doc(checkInId);
         const userCheckInRef = firestore().collection(`users/${userId}`).doc(checkInId);
         batch.update;
       });
-    }
 
-    await batch.commit();
+      await batch.commit();
+    }
   } catch (err) {
     throw err;
   }

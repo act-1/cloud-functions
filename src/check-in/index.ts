@@ -63,8 +63,11 @@ export const userCheckIn = functions.https.onCall(async (data, context) => {
     // Increment the location counter in the realtime database.
     await database().ref(`locationCounter/${locationId}`).set(database.ServerValue.increment(1));
 
-    return { ok: true };
-    // Increment check in realtime database counter.
+    // Retrieve the saved check in object
+    const checkInDocument = await userCheckInRef.get();
+    const checkInData = checkInDocument.data();
+
+    return { ok: true, checkIn: checkInData };
   } catch (err) {
     throw err;
   }

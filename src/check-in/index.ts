@@ -75,8 +75,11 @@ export const userCheckIn = functions.https.onCall(async (data, context) => {
  */
 async function updateCheckInCount() {
   try {
-    const expiredCheckInsSnapshot = await firestore().collection('checkIns').where('expiresAt', '<=', new Date()).get();
-
+    const expiredCheckInsSnapshot = await firestore()
+      .collection('checkIns')
+      .where('expireAt', '<=', new Date())
+      .where('isActive', '==', true)
+      .get();
     let checkInLocations = {};
 
     // Create an object which contains the locationIds and their respective check ins.

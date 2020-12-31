@@ -31,9 +31,8 @@ export const userCheckIn = functions.https.onCall(async (data, context) => {
 
     // Check if the user checks in to an event.
     // If they do - set the expiration time to the event end time.
-    let eventRef = null;
     if (eventId) {
-      eventRef = firestore().collection('events').doc(eventId);
+      const eventRef = firestore().collection('events').doc(eventId);
       const eventDoc = await eventRef.get();
       if (!eventDoc.exists) throw new functions.https.HttpsError('not-found', 'The event does not exist.');
       expireAt = eventDoc.data().endTime;
@@ -53,25 +52,16 @@ export const userCheckIn = functions.https.onCall(async (data, context) => {
     };
 
     // Create check in documents
-
-    const checkInRef = await firestore()
-      .collection('checkIns')
-      .add({ ...checkInInfo, isActive: true });
+    const checkInRef = firestore().collection('checkIns').doc();
+    const userCheckInRef = firestore().collection(`users/${userId}/checkIns`).doc(checkInRef.id);
 
     const batch = firestore().batch();
-
-    const userCheckInRef = firestore().collection(`users/${userId}/checkIns`).doc(checkInRef.id);
+    batch.set(checkInRef, { ...checkInInfo, isActive: true });
     batch.set(userCheckInRef, { ...checkInInfo, isActive: true, id: checkInRef.id });
-
-    if (eventRef) {
-      const eventCheckInRef = firestore().collection(`events/${eventId}/checkIns`).doc(checkInRef.id);
-      batch.set(eventCheckInRef, { ...checkInInfo, id: checkInRef.id });
-    }
+    await batch.commit();
 
     // Increment the location counter in the realtime database.
     database().ref(`locationCounter/${locationId}`).set(database.ServerValue.increment(1));
-
-    await batch.commit();
 
     return { ok: true };
     // Increment check in realtime database counter

@@ -109,7 +109,7 @@ async function updateCheckInCount() {
           const { checkInId, userId } = checkIn;
 
           const checkInRef = firestore().collection(`checkIns`).doc(checkInId);
-          const userCheckInRef = firestore().collection(`users/${userId}`).doc(checkInId);
+          const userCheckInRef = firestore().collection(`users/${userId}/checkIns`).doc(checkInId);
 
           batch.update(checkInRef, { isActive: false, updatedAt: firestore.FieldValue.serverTimestamp() });
           batch.update(userCheckInRef, { isActive: false, updatedAt: firestore.FieldValue.serverTimestamp() });

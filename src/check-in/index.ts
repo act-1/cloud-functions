@@ -73,7 +73,7 @@ export const userCheckIn = functions.https.onCall(async (data, context) => {
 /**
  * Retrieves all expired check ins, updates their isActive property and decrements their location.
  */
-exports.updateCheckInCount = functions.pubsub.schedule('every 30 minutes').onRun(async (context) => {
+async function updateCheckInCount() {
   try {
     const expiredCheckInsSnapshot = await firestore().collection('checkIns').where('expiresAt', '<=', new Date()).get();
 
@@ -93,27 +93,53 @@ exports.updateCheckInCount = functions.pubsub.schedule('every 30 minutes').onRun
 
     const locationIds = Object.keys(checkInLocations);
 
-    for (let i = 0; i < locationIds.length; i++) {
-      const locationId = locationIds[i];
-      const locationCheckIns = checkInLocations[locationId];
+    locationIds.map(async (locationId) => {
+      try {
+        // Take all check in for a location.
+        const locationCheckIns = checkInLocations[locationId];
 
-      // Batch commits are limited to 500 document writes.
-      documentCount += locationCheckIns.length * 2;
-      if (documentCount >= 500) return;
+        const batch = firestore().batch();
+        let expiredLocationCheckInCounter = 0;
 
-      const batch = firestore().batch();
+        // Set isActive check in flag to false on both check in & user collections.
+        locationCheckIns.forEach((checkIn) => {
+          const { checkInId, userId } = checkIn;
 
-      // Iterate over the location check ins.
-      locationCheckIns.forEach((checkIn) => {
-        const { checkInId, userId } = checkIn;
-        const checkInRef = firestore().collection(`checkIns`).doc(checkInId);
-        const userCheckInRef = firestore().collection(`users/${userId}`).doc(checkInId);
-        batch.update;
-      });
+          const checkInRef = firestore().collection(`checkIns`).doc(checkInId);
+          const userCheckInRef = firestore().collection(`users/${userId}`).doc(checkInId);
 
-      await batch.commit();
-    }
+          batch.update(checkInRef, { isActive: false, updatedAt: firestore.FieldValue.serverTimestamp() });
+          batch.update(userCheckInRef, { isActive: false, updatedAt: firestore.FieldValue.serverTimestamp() });
+
+          expiredLocationCheckInCounter++;
+        });
+
+        await batch.commit();
+
+        // Decrement expired check ins from location counter.
+        await database()
+          .ref(`locationCounter/${locationId}`)
+          .set(database.ServerValue.increment(-expiredLocationCheckInCounter));
+
+        return true;
+      } catch (err) {
+        throw err;
+      }
+    });
   } catch (err) {
     throw err;
   }
+}
+
+exports.updateCheckInCountManually = functions.https.onCall(async (data, context) => {
+  try {
+    if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Not authenticated.');
+    return await updateCheckInCount();
+  } catch (err) {
+    throw err;
+  }
+});
+
+exports.updateCheckInCount = functions.pubsub.schedule('every 30 minutes').onRun(async (context) => {
+  updateCheckInCount();
 });

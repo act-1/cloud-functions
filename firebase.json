@@ -5,9 +5,7 @@
   },
   "functions": {
     "source": "./",
-    "predeploy": [
-      "npm --prefix \"$RESOURCE_DIR\" run build"
-    ]
+    "predeploy": ["npm --prefix \"$RESOURCE_DIR\" run build"]
   },
   "emulators": {
     "auth": {
@@ -21,6 +19,12 @@
     },
     "ui": {
       "enabled": true
+    },
+    "pubsub": {
+      "port": 5555
+    },
+    "database": {
+      "port": 9000
     }
   }
 }

@@ -49,9 +49,9 @@ export const createUserFCMToken = functions.https.onCall(async (data, context) =
 
       return { created: true };
     } else {
-      throw 'The FCM token already exists.';
+      throw new functions.https.HttpsError('already-exists', 'The FCM token already exists.');
     }
   } catch (err) {
-    throw new functions.https.HttpsError('not-found', err.message);
+    throw err;
   }
 });

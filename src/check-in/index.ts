@@ -147,6 +147,6 @@ exports.updateCheckInCountManually = functions.https.onCall(async (data, context
   }
 });
 
-exports.updateCheckInCount = functions.pubsub.schedule('every 30 minutes').onRun(async (context) => {
+exports.updateCheckInCount = functions.pubsub.schedule('every 1 hour').onRun(async (context) => {
   updateCheckInCount();
 });

@@ -20,9 +20,11 @@ async function seedData() {
 
     // Seed geofirestore Documents
     const locationCollection = GeoFirestore.collection('locations');
-    const locationSeedData = GeoSeed.locations.map(({ lat, lng, ...location }) =>
-      locationCollection.doc(location.id).set({ ...location, coordinates: new admin.firestore.GeoPoint(lat, lng) })
-    );
+    const locationSeedData = GeoSeed.locations.map((location) => locationCollection.doc(location.id).set(location));
+    await Promise.all(locationSeedData);
+
+    const eventCollection = GeoFirestore.collection('events');
+    const eventSeedData = GeoSeed.events.map((event) => eventCollection.doc(event.id).set(event));
     await Promise.all(locationSeedData);
 
     console.log('🌱 Firestore data seeded successfuly.');

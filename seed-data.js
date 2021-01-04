@@ -23,4 +23,14 @@ module.exports = {
       },
     ],
   },
+  'posts/first-post': {
+    authorId: 'kumiiisrael',
+    authorName: 'קומי ישראל',
+    authorPicture: 'https://res.cloudinary.com/onekm/image/upload/v1609308381/organizers/kumi_ze0p8z.jpg',
+    authorType: 'organization',
+    content:
+      '<p>המאבק הנחוש ברחובות הביא להפלת הממשלה הנוראית והכושלת ביותר מקום המדינה, אך זהו רק צעד ראשון בדרך לשינוי אמיתי ועמוק בחברה ובהנהגה הישראלית. רק המחאה תכריע. 19:00 גשר המיתרים. 20:00 בלפור.</p>',
+    likeCounter: 0,
+    timestamp: firestore.Timestamp.fromDate(new Date()),
+  },
 };

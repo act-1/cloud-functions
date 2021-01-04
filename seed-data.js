@@ -1,10 +1,20 @@
 const { firestore } = require('firebase-admin');
 
+const now = new Date();
+const before1Hour = new Date();
+before1Hour.setHours(now.getHours() + 5);
+
 module.exports = {
   'organizations/kumiiisrael': {
     id: 'kumi',
     name: 'קומי ישראל',
     profilePicture: 'https://res.cloudinary.com/onekm/image/upload/v1609308381/organizers/kumi_ze0p8z.jpg',
+  },
+  'organizations/crime-minister': {
+    id: 'crime-minister',
+    name: 'Crime Minister',
+    profilePicture:
+      'https://res.cloudinary.com/onekm/image/upload/c_scale,w_300/v1608279410/organizers/crime-minister_alpxwz.png',
   },
   'events/no-seger-politi': {
     title: 'לא נסכים לסגר פוליטי',
@@ -31,6 +41,56 @@ module.exports = {
     content:
       '<p>המאבק הנחוש ברחובות הביא להפלת הממשלה הנוראית והכושלת ביותר מקום המדינה, אך זהו רק צעד ראשון בדרך לשינוי אמיתי ועמוק בחברה ובהנהגה הישראלית. רק המחאה תכריע. 19:00 גשר המיתרים. 20:00 בלפור.</p>',
     likeCounter: 0,
-    timestamp: firestore.Timestamp.fromDate(new Date()),
+    timestamp: firestore.Timestamp.fromDate(now),
+  },
+  'posts/another-post': {
+    authorId: 'crime-minister',
+    authorName: 'Crime Minister',
+    authorPicture:
+      'https://res.cloudinary.com/onekm/image/upload/c_scale,w_300/v1608279410/organizers/crime-minister_alpxwz.png',
+    authorType: 'organization',
+    content: '<p>מוצש. בלפור. 19:30. בנוהל!</p>',
+    likeCounter: 0,
+    timestamp: firestore.Timestamp.fromDate(before1Hour),
+  },
+  'posts/another-post-2': {
+    authorId: 'crime-minister',
+    authorName: 'Crime Minister',
+    authorPicture:
+      'https://res.cloudinary.com/onekm/image/upload/c_scale,w_300/v1608279410/organizers/crime-minister_alpxwz.png',
+    authorType: 'organization',
+    content: '<p>מוצש. בלפור. 19:30. בנוהל!</p>',
+    likeCounter: 0,
+    timestamp: firestore.Timestamp.fromDate(before1Hour),
+  },
+  'posts/another-post-3': {
+    authorId: 'crime-minister',
+    authorName: 'Crime Minister',
+    authorPicture:
+      'https://res.cloudinary.com/onekm/image/upload/c_scale,w_300/v1608279410/organizers/crime-minister_alpxwz.png',
+    authorType: 'organization',
+    content: '<p>מוצש. בלפור. 19:30. בנוהל!</p>',
+    likeCounter: 0,
+    timestamp: firestore.Timestamp.fromDate(before1Hour),
+  },
+  'posts/another-post-4': {
+    authorId: 'crime-minister',
+    authorName: 'Crime Minister',
+    authorPicture:
+      'https://res.cloudinary.com/onekm/image/upload/c_scale,w_300/v1608279410/organizers/crime-minister_alpxwz.png',
+    authorType: 'organization',
+    content: '<p>מוצש. בלפור. 19:30. בנוהל!</p>',
+    likeCounter: 0,
+    timestamp: firestore.Timestamp.fromDate(before1Hour),
+  },
+  'posts/first-post-2': {
+    authorId: 'kumiiisrael',
+    authorName: 'קומי ישראל',
+    authorPicture: 'https://res.cloudinary.com/onekm/image/upload/v1609308381/organizers/kumi_ze0p8z.jpg',
+    authorType: 'organization',
+    content:
+      '<p>המאבק הנחוש ברחובות הביא להפלת הממשלה הנוראית והכושלת ביותר מקום המדינה, אך זהו רק צעד ראשון בדרך לשינוי אמיתי ועמוק בחברה ובהנהגה הישראלית. רק המחאה תכריע. 19:00 גשר המיתרים. 20:00 בלפור.</p>',
+    likeCounter: 0,
+    timestamp: firestore.Timestamp.fromDate(now),
   },
 };

@@ -35,7 +35,7 @@ export const userCheckIn = functions.https.onCall(async (data, context) => {
       const eventRef = firestore().collection('events').doc(eventId);
       const eventDoc = await eventRef.get();
       if (!eventDoc.exists) throw new functions.https.HttpsError('not-found', 'The event does not exist.');
-      expireAt = eventDoc.data().endTime;
+      expireAt = eventDoc.data().endDate;
     }
 
     const location = await firestore().collection('locations').doc(locationId).get();
@@ -44,6 +44,7 @@ export const userCheckIn = functions.https.onCall(async (data, context) => {
 
     const checkInInfo = {
       userId,
+      eventId: eventId || null,
       locationId,
       locationName: locationDoc.name,
       locationCity: locationDoc.city,

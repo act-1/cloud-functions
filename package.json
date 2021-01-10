@@ -8,7 +8,7 @@
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
     "emulator": "firebase emulators:start",
-    "deploy": "firebase deploy --only functions",
+    "deploy": "npm run build && firebase deploy --only functions",
     "test": "jest",
     "logs": "firebase functions:log"
   },

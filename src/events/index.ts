@@ -12,7 +12,7 @@ exports.updatePastEvents = functions.pubsub.schedule('every 60 minutes').onRun(a
       .where('endDate', '<=', new Date())
       .get();
 
-    const updates = pastEventsSnapshot.docs.map((event) => event.ref.set({ pastEvent: true }));
+    const updates = pastEventsSnapshot.docs.map((event) => event.ref.update({ pastEvent: true }));
     await Promise.all(updates);
 
     return true;

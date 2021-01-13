@@ -24,20 +24,19 @@ async function updateCheckInCount() {
       }
     });
 
-    let documentCount = 0;
-
     const locationIds = Object.keys(checkInLocations);
 
-    locationIds.map(async (locationId) => {
+    const updateRequests = locationIds.map(async (locationId) => {
+      let expiredLocationCheckInCounter = 0;
+      const locationCheckIns = checkInLocations[locationId];
+
       try {
         // Take all check in for a location.
-        const locationCheckIns = checkInLocations[locationId];
 
         const batch = firestore().batch();
-        let expiredLocationCheckInCounter = 0;
 
         // Set isActive check in flag to false on both check in & user collections.
-        locationCheckIns.forEach((checkIn) => {
+        const checkInPromises = await locationCheckIns.map(async (checkIn) => {
           const { checkInId, userId } = checkIn;
 
           const checkInRef = firestore().collection(`checkIns`).doc(checkInId);
@@ -46,21 +45,43 @@ async function updateCheckInCount() {
           batch.update(checkInRef, { isActive: false, updatedAt: firestore.FieldValue.serverTimestamp() });
           batch.update(userCheckInRef, { isActive: false, updatedAt: firestore.FieldValue.serverTimestamp() });
 
+          const publicCheckInRef = database().ref(`checkIns/${locationId}/${checkInId}`);
+
+          try {
+            const publicCheckInSnapshot = await publicCheckInRef.once('value');
+
+            if (publicCheckInSnapshot.exists()) {
+              await publicCheckInRef.update({ isActive: false, updatedAt: database.ServerValue.TIMESTAMP });
+            }
+          } catch (err) {
+            console.error(err);
+          }
+
           expiredLocationCheckInCounter++;
+          console.log(`Check in activity ${checkInId} was set to off (pending batch commit).`);
         });
 
+        // Wait for all check ins batch additions to finish
+        await Promise.all(checkInPromises);
+
+        // Commit check in firestore updates
         await batch.commit();
 
         // Decrement expired check ins from location counter.
-        await database()
-          .ref(`locationCounter/${locationId}`)
-          .set(database.ServerValue.increment(-expiredLocationCheckInCounter));
+        const decrementCount = -expiredLocationCheckInCounter;
+        await database().ref('locationCounter').child(locationId).set(database.ServerValue.increment(decrementCount));
+
+        console.log(`Removed ${expiredLocationCheckInCounter} check ins from ${locationId}`);
 
         return true;
       } catch (err) {
+        console.error(err);
         throw err;
       }
     });
+    await Promise.all(updateRequests);
+
+    console.log(expiredCheckInsSnapshot.docs);
   } catch (err) {
     throw err;
   }
@@ -69,12 +90,19 @@ async function updateCheckInCount() {
 exports.updateCheckInCountManually = functions.https.onCall(async (data, context) => {
   try {
     if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Not authenticated.');
-    return await updateCheckInCount();
+
+    const result = await updateCheckInCount();
+    return result;
   } catch (err) {
     throw err;
   }
 });
 
 exports.updateCheckInCount = functions.pubsub.schedule('every 60 minutes').onRun(async (context) => {
-  updateCheckInCount();
+  try {
+    await updateCheckInCount();
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
 });

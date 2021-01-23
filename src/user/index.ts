@@ -1,25 +1,38 @@
 import * as functions from 'firebase-functions';
-import { firestore } from 'firebase-admin';
+import { firestore, storage } from 'firebase-admin';
 
 export const onUserCreation = functions.auth.user().onCreate(async (user) => {
   const isAnonymous = user.providerData.length === 0;
+  let displayName = 'אנונימי/ת';
+  let profilePicture =
+    'https://res.cloudinary.com/act1/image/upload/v1610881280/profile_pictures/account-placeholder.png';
+
+  if (!isAnonymous) {
+    displayName = user.providerData[0].displayName || displayName;
+  }
+
+  const { providerId } = user.providerData[0];
+
+  if (providerId === 'google.com') {
+  }
 
   try {
-    if (isAnonymous) {
-      const userRef = firestore().collection('users').doc(user.uid);
-      const userDoc = await userRef.get();
+    const userRef = firestore().collection('users').doc(user.uid);
+    const userDoc = await userRef.get();
 
-      if (!userDoc.exists) {
-        const result = await userRef.set({
-          isAnonymous: true,
-          createdAt: firestore.FieldValue.serverTimestamp(),
-        });
+    if (!userDoc.exists) {
+      const result = await userRef.set({
+        id: userDoc.id,
+        isAnonymous,
+        displayName,
+        profilePicture,
+        signupCompleted: false,
+        createdAt: firestore.FieldValue.serverTimestamp(),
+      });
 
-        return result;
-      }
-      throw 'User already exists.';
+      return result;
     }
-    throw 'Only anonymous users are currently supported.';
+    throw 'User already exists.';
   } catch (err) {
     throw new functions.https.HttpsError('not-found', err.message);
   }

@@ -1,6 +1,6 @@
 const admin = require('firebase-admin');
 const geofirestore = require('geofirestore');
-const seed = require('./seed-data');
+const seed = require('./seed/seed-data');
 const GeoSeed = require('./seed/geofirestore-documents');
 
 process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080';
@@ -26,6 +26,10 @@ async function seedData() {
     const eventCollection = GeoFirestore.collection('events');
     const eventSeedData = GeoSeed.events.map((event) => eventCollection.doc(event.id).set(event));
     await Promise.all(locationSeedData);
+
+    const postsCollection = GeoFirestore.collection('posts');
+    const postSeedData = GeoSeed.posts.map((post) => postsCollection.doc(post.id).set(post));
+    await Promise.all(postSeedData);
 
     console.log('🌱 Firestore data seeded successfuly.');
   } catch (err) {

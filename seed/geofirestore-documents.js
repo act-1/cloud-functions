@@ -30,15 +30,16 @@ module.exports = {
   ],
   events: [
     {
-      id: 'no-seger-politi',
-      title: 'לא נסכים לסגר פוליטי',
+      id: 'tlv-street-march',
+      title: 'תל אביב יוצאת לרחוב',
+      compactThumbnail: 'https://res.cloudinary.com/onekm/image/upload/v1612866689/event_thumbs/eventhumb1_nus985.png',
       thumbnail:
-        'https://scontent-arn2-2.xx.fbcdn.net/v/t1.0-9/133797631_181481130388718_4878572341523429435_n.jpg?_nc_cat=105&ccb=2&_nc_sid=340051&_nc_ohc=P2Dtw4Px4CUAX8ZOKyw&_nc_ht=scontent-arn2-2.xx&oh=c5c30a4f51cfa6c10e78a281b94a9213&oe=6014E9B6',
+        'https://scontent.ftlv5-1.fna.fbcdn.net/v/t1.0-9/147753239_208741727662658_6215603639489934569_o.jpg?_nc_cat=109&ccb=3&_nc_sid=340051&_nc_ohc=tQGHDwEHzC0AX9ZBCRY&_nc_ht=scontent.ftlv5-1.fna&oh=942097c4644bb1303f7fda3f3da27cf9&oe=604B89AB',
       startDate: firestore.Timestamp.fromDate(now),
       endDate: firestore.Timestamp.fromDate(in5Hours),
       locationId: 'habima-square',
-      locationName: 'כיכר הבימה, תל אביב',
-      city: 'תל אביב',
+      locationName: 'כיכר הבימה',
+      city: 'תל אביב - יפו',
       province: 'תל אביב',
       coordinates: new firestore.GeoPoint(32.072384, 34.779377),
       attendingCount: 0,
@@ -54,13 +55,16 @@ module.exports = {
       pastEvent: false,
     },
     {
-      id: 'balfur-sabbath',
-      title: 'שבת בבלפור',
-      thumbnail: 'https://res.cloudinary.com/onekm/image/upload/v1608277882/event_thumbs/balfur-19-dec_oi3uhh.jpg',
+      id: 'stop-the-transfer',
+      title: 'עוצרים את הגירוש',
+      thumbnail:
+        'hhttps://scontent.ftlv5-1.fna.fbcdn.net/v/t1.0-9/142479377_4184100031601382_8867343736105820135_n.jpg?_nc_cat=108&ccb=3&_nc_sid=e3f864&_nc_ohc=MyR4iQFBHeUAX_IAsle&_nc_ht=scontent.ftlv5-1.fna&oh=656ff75a4c639be693eb5688349067e0&oe=604B841C',
+      compactThumbnail:
+        'https://res.cloudinary.com/onekm/image/upload/v1612871850/event_thumbs/Artboard_Copy_z8bgvh.png',
       startDate: firestore.Timestamp.fromDate(now),
       endDate: firestore.Timestamp.fromDate(in5Hours),
       locationId: 'balfur',
-      locationName: 'כיכר פריז',
+      locationName: 'בלפור',
       city: 'ירושלים',
       province: 'ירושלים',
       coordinates: new firestore.GeoPoint(31.775077, 35.217622),

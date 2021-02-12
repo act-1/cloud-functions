@@ -1,6 +1,6 @@
 const admin = require('firebase-admin');
 const geofirestore = require('geofirestore');
-const seed = require('./seed-data');
+const seed = require('./seed/seed-data');
 const GeoSeed = require('./seed/geofirestore-documents');
 
 process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080';

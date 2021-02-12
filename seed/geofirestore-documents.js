@@ -79,6 +79,30 @@ module.exports = {
         },
       ],
       pastEvent: false,
+      createdAt: firestore.FieldValue.serverTimestamp(),
+    },
+  ],
+  posts: [
+    {
+      archived: false,
+      authorId: 'd8GSM5GdfuW0KDlH7dy8oqd5ngz1',
+      authorName: 'Guy',
+      authorPicture:
+        'https://firebasestorage.googleapis.com/v0/b/act1-dev.appspot.com/o/profilePictures%2Fd8GSM5GdfuW0KDlH7dy8oqd5ngz1%2FaVQWeyiBDi.jpg?alt=media&token=b4350a20-1abd-4cb0-a303-8595775b794c',
+      blurhash: 'LXFXeO%0NHjb~9%1RkRkxtxZWBRk',
+      featured: true,
+      id: 'K0HjtO1bOAGg24ZrrGcN',
+      likeCounter: 0,
+      locationName: 'כיכר פריז',
+      pictureHeight: 1440,
+      pictureUrl:
+        'https://media.reshet.tv/image/upload/t_main_image_article,f_auto,q_auto/v1596087348/protst1_j79xag.png',
+      pictureWidth: 1920,
+      text: '',
+      type: 'picture',
+      coordinates: new firestore.GeoPoint(31.775077, 35.217622),
+      createdAt: firestore.FieldValue.serverTimestamp(),
+      updatedAt: firestore.FieldValue.serverTimestamp(),
     },
   ],
 };

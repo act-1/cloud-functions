@@ -27,6 +27,10 @@ async function seedData() {
     const eventSeedData = GeoSeed.events.map((event) => eventCollection.doc(event.id).set(event));
     await Promise.all(locationSeedData);
 
+    const postsCollection = GeoFirestore.collection('posts');
+    const postSeedData = GeoSeed.posts.map((post) => postsCollection.doc(post.id).set(post));
+    await Promise.all(postSeedData);
+
     console.log('🌱 Firestore data seeded successfuly.');
   } catch (err) {
     console.error(err);

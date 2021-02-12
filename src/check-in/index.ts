@@ -1,6 +1,24 @@
 import * as functions from 'firebase-functions';
 import { firestore, database } from 'firebase-admin';
 
+exports.onCheckIn = functions.firestore.document('checkIns/{docId}').onCreate(async (snap, context) => {
+  try {
+    const checkInData = snap.data();
+
+    const { userId, id: checkInId, locationId } = checkInData;
+
+    const userCheckIn = await firestore().collection(`users/${userId}/checkIns`).doc(checkInId).set(checkInData);
+
+    // Update stats.
+    database().ref('locationCounter').child(locationId).set(database.ServerValue.increment(1));
+    database().ref('currentCheckIns').set(database.ServerValue.increment(1));
+
+    // if public check in - create rtdb doc
+  } catch (err) {
+    console.error(err);
+    throw err;
+});
+
 /**
  * Retrieves all expired check ins, updates their isActive property and decrements their location.
  */

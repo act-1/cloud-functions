@@ -58,7 +58,7 @@ module.exports = {
       id: 'stop-the-transfer',
       title: 'עוצרים את הגירוש',
       thumbnail:
-        'hhttps://scontent.ftlv5-1.fna.fbcdn.net/v/t1.0-9/142479377_4184100031601382_8867343736105820135_n.jpg?_nc_cat=108&ccb=3&_nc_sid=e3f864&_nc_ohc=MyR4iQFBHeUAX_IAsle&_nc_ht=scontent.ftlv5-1.fna&oh=656ff75a4c639be693eb5688349067e0&oe=604B841C',
+        'https://scontent.ftlv5-1.fna.fbcdn.net/v/t1.0-9/142479377_4184100031601382_8867343736105820135_n.jpg?_nc_cat=108&ccb=3&_nc_sid=e3f864&_nc_ohc=MyR4iQFBHeUAX_IAsle&_nc_ht=scontent.ftlv5-1.fna&oh=656ff75a4c639be693eb5688349067e0&oe=604B841C',
       compactThumbnail:
         'https://res.cloudinary.com/onekm/image/upload/v1612871850/event_thumbs/Artboard_Copy_z8bgvh.png',
       startDate: firestore.Timestamp.fromDate(now),

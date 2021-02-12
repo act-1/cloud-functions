@@ -6,7 +6,7 @@ const GeoSeed = require('./seed/geofirestore-documents');
 process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080';
 
 const app = admin.initializeApp({
-  projectId: 'act1co',
+  projectId: 'act1-dev',
   credential: admin.credential.applicationDefault(),
 });
 

@@ -10,10 +10,15 @@ exports.onCheckIn = functions.firestore.document('checkIns/{docId}').onCreate(as
     const userCheckIn = await firestore().collection(`users/${userId}/checkIns`).doc(checkInId).set(checkInData);
 
     // Update stats.
-    database().ref('locationCounter').child(locationId).set(database.ServerValue.increment(1));
-    database().ref('currentCheckIns').set(database.ServerValue.increment(1));
+    await database().ref('locationCounter').child(locationId).set(database.ServerValue.increment(1));
+    await database().ref('currentCheckIns').set(database.ServerValue.increment(1));
 
-    // if public check in - create rtdb doc
+    // TODO: Only if public check in - create rtdb doc
+    await database().ref(`checkIns/${locationId}/${checkInId}`).set({
+      createdAt: database.ServerValue.TIMESTAMP,
+      isActive: true,
+      profilePicture: checkInData.profilePicture,
+    });
   } catch (err) {
     console.error(err);
     throw err;

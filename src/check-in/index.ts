@@ -17,6 +17,7 @@ exports.onCheckIn = functions.firestore.document('checkIns/{docId}').onCreate(as
   } catch (err) {
     console.error(err);
     throw err;
+  }
 });
 
 /**
@@ -98,8 +99,8 @@ async function updateCheckInCount() {
       }
     });
     await Promise.all(updateRequests);
-
-    console.log(expiredCheckInsSnapshot.docs);
+    await database().ref('currentCheckIns').set(database.ServerValue.increment(-expiredCheckInsSnapshot.docs.length));
+    console.log('Total check ins removed: ', expiredCheckInsSnapshot.docs.length);
   } catch (err) {
     throw err;
   }

@@ -5,20 +5,31 @@ exports.onCheckIn = functions.firestore.document('checkIns/{docId}').onCreate(as
   try {
     const checkInData = snap.data();
 
-    const { userId, id: checkInId, locationId } = checkInData;
-
-    const userCheckIn = await firestore().collection(`users/${userId}/checkIns`).doc(checkInId).set(checkInData);
+    const { userId, id: checkInId, locationId, privacySetting } = checkInData;
 
     // Update stats.
     await database().ref('locationCounter').child(locationId).set(database.ServerValue.increment(1));
     await database().ref('currentCheckIns').set(database.ServerValue.increment(1));
 
-    // TODO: Only if public check in - create rtdb doc
-    await database().ref(`checkIns/${locationId}/${checkInId}`).set({
-      createdAt: database.ServerValue.TIMESTAMP,
-      isActive: true,
-      profilePicture: checkInData.profilePicture,
-    });
+    /**
+     * Privacy settings:
+     * PUBLIC - Add a check in entry to the location's RTDB ref and to the user's firestore document.
+     * PRIVATE - Add the check in entry to the user's firestore document.
+     * ANONYMOUS - Don't do anything, only increment the stats (above).
+     */
+
+    if (privacySetting === 'PUBLIC') {
+      await database().ref(`checkIns/${locationId}/${checkInId}`).set({
+        createdAt: database.ServerValue.TIMESTAMP,
+        isActive: true,
+        profilePicture: checkInData.profilePicture,
+      });
+      await firestore().collection(`users/${userId}/checkIns`).doc(checkInId).set(checkInData);
+    }
+
+    if (privacySetting === 'ANONYMOUS') {
+      await firestore().collection(`users/${userId}/checkIns`).doc(checkInId).set(checkInData);
+    }
   } catch (err) {
     console.error(err);
     throw err;

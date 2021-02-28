@@ -5,7 +5,7 @@ exports.onCheckIn = functions.firestore.document('checkIns/{docId}').onCreate(as
   try {
     const checkInData = snap.data();
 
-    const { userId, id: checkInId, locationId, privacySetting } = checkInData;
+    const { id: checkInId, locationId, userId, displayName, privacySetting, eventId } = checkInData;
 
     // Update stats.
     await database().ref('locationCounter').child(locationId).set(database.ServerValue.increment(1));
@@ -24,10 +24,17 @@ exports.onCheckIn = functions.firestore.document('checkIns/{docId}').onCreate(as
         isActive: true,
         profilePicture: checkInData.profilePicture,
       });
+
+      // Add user to the chat room.
+      // Only allowed for events; not available for location check ins.
+      if (eventId) {
+        await database().ref(`chat/rooms/${eventId}/members/${userId}`).set({ displayName });
+      }
+
       await firestore().collection(`users/${userId}/checkIns`).doc(checkInId).set(checkInData);
     }
 
-    if (privacySetting === 'ANONYMOUS') {
+    if (privacySetting === 'PRIVATE') {
       await firestore().collection(`users/${userId}/checkIns`).doc(checkInId).set(checkInData);
     }
   } catch (err) {

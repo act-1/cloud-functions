@@ -25,17 +25,11 @@ exports.onCheckIn = functions.firestore.document('checkIns/{docId}').onCreate(as
         profilePicture: checkInData.profilePicture,
       });
 
-      // Add user to the chat room.
-      // Only allowed for events; not available for location check ins.
       if (eventId) {
+        // Add user to the chat room.
+        // Only allowed for events; not available for location check ins.
         await database().ref(`chat/rooms/${eventId}/members/${userId}`).set({ displayName });
       }
-
-      await firestore().collection(`users/${userId}/checkIns`).doc(checkInId).set(checkInData);
-    }
-
-    if (privacySetting === 'PRIVATE') {
-      await firestore().collection(`users/${userId}/checkIns`).doc(checkInId).set(checkInData);
     }
   } catch (err) {
     console.error(err);
@@ -77,15 +71,13 @@ async function updateCheckInCount() {
 
         const batch = firestore().batch();
 
-        // Set isActive check in flag to false on both check in & user collections.
+        // Set isActive check in flag to false.
         const checkInPromises = await locationCheckIns.map(async (checkIn) => {
           const { checkInId, userId } = checkIn;
 
           const checkInRef = firestore().collection(`checkIns`).doc(checkInId);
-          const userCheckInRef = firestore().collection(`users/${userId}/checkIns`).doc(checkInId);
 
           batch.update(checkInRef, { isActive: false, updatedAt: firestore.FieldValue.serverTimestamp() });
-          batch.update(userCheckInRef, { isActive: false, updatedAt: firestore.FieldValue.serverTimestamp() });
 
           const publicCheckInRef = database().ref(`checkIns/${locationId}/${checkInId}`);
 

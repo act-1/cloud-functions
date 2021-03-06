@@ -11,11 +11,6 @@ export const onUserCreation = functions.auth.user().onCreate(async (user) => {
     displayName = user.providerData[0].displayName || displayName;
   }
 
-  const { providerId } = user.providerData[0];
-
-  if (providerId === 'google.com') {
-  }
-
   try {
     const userRef = firestore().collection('users').doc(user.uid);
     const userDoc = await userRef.get();

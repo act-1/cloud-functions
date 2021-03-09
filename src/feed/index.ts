@@ -1,5 +1,7 @@
 import * as functions from 'firebase-functions';
-import { firestore } from 'firebase-admin';
+import admin, { firestore } from 'firebase-admin';
+
+const bucket = admin.storage().bucket();
 
 /**
  * Adds the user like to the post's like subcollection & the user's like list, and increments the post's like counter.
@@ -80,5 +82,36 @@ export const unlikePost = functions.https.onCall(async (data, context) => {
     return { updated: true, action: 'unlike' };
   } catch (err) {
     throw new functions.https.HttpsError('not-found', err.message);
+  }
+});
+
+/** Delete post trigger.
+ *  If the post is of type `picture`, we remove the `picture` document and the storaged file.
+ */
+export const onPostDeletion = functions.firestore.document('posts/{postId}').onDelete(async (snap, context) => {
+  try {
+    const postData = snap.data();
+
+    if (postData.type === 'picture') {
+      console.log(`Trying to delete a picture post by userId ${postData.authorId}.`);
+      const pictureRef = firestore().collection('pictures').doc(postData.pictureId);
+
+      const pictureSnapshot = await pictureRef.get();
+
+      if (pictureSnapshot.exists) {
+        const { storagePath } = pictureSnapshot.data();
+
+        await bucket.file(storagePath).delete();
+        await pictureRef.delete();
+
+        console.log(`A picture post by userId ${postData.authorId} has been deleted.`, postData);
+      } else {
+        console.log(postData);
+        throw new Error(`The picture document ${postData.pictureId} does not exist.`);
+      }
+    }
+  } catch (err) {
+    console.error(err);
+    throw err;
   }
 });

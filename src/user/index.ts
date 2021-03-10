@@ -36,10 +36,9 @@ export const onUserCreation = functions.auth.user().onCreate(async (user) => {
 export const createUserFCMToken = functions.https.onCall(async (data, context) => {
   if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Not authenticated.');
   if (!data.fcmToken) throw new functions.https.HttpsError('invalid-argument', 'Missing token.');
-  if (!data.deviceId) throw new functions.https.HttpsError('invalid-argument', 'Missing device Id.');
 
   const { uid: userId } = context.auth;
-  const { fcmToken, deviceId, deviceName } = data;
+  const { fcmToken } = data;
 
   try {
     const fcmTokenRef = firestore().collection(`users/${userId}/devices`).doc(fcmToken);
@@ -48,8 +47,6 @@ export const createUserFCMToken = functions.https.onCall(async (data, context) =
     if (!fcmTokenDoc.exists) {
       await fcmTokenRef.set({
         id: fcmToken,
-        deviceId,
-        deviceName,
         userId,
         active: true,
         createdAt: firestore.FieldValue.serverTimestamp(),

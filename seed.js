@@ -21,9 +21,9 @@ async function seedData() {
     await Promise.all(promises);
 
     // Seed geofirestore Documents
-    const regionCollection = GeoFirestore.collection('regions');
-    const regionSeedData = GeoSeed.regions.map((region) => regionCollection.doc(region.id).set(region));
-    await Promise.all(regionSeedData);
+    const locationCollection = GeoFirestore.collection('locations');
+    const locationSeedData = GeoSeed.locations.map((location) => locationCollection.doc(location.id).set(location));
+    await Promise.all(locationSeedData);
 
     const eventCollection = GeoFirestore.collection('events');
     const eventSeedData = GeoSeed.events.map((event) => eventCollection.doc(event.id).set(event));
@@ -34,12 +34,23 @@ async function seedData() {
     await Promise.all(postSeedData);
 
     // Realtime Database seed
-    // Locations nodes
+    // Region nodes
+    const RTDBRegions = Object.entries(RealtimeSeed.regions);
+    const regionsPromises = RTDBRegions.map(([region, value]) =>
+      admin.database().ref('regions').child(region).set(value)
+    );
+
+    // Location nodes
     const RTDBLocations = Object.entries(RealtimeSeed.locations);
     const locationsPromises = RTDBLocations.map(([location, value]) =>
       admin.database().ref('locations').child(location).set(value)
     );
-    await Promise.all(locationsPromises);
+
+    // Total counter
+    const totalCounterValue = RealtimeSeed.totalCounter;
+    const totalCounterPromise = admin.database().ref('totalCounter').set(totalCounterValue);
+
+    await Promise.all([...regionsPromises, ...locationsPromises, totalCounterPromise]);
 
     console.log('🌱 Firestore data seeded successfuly.');
     process.exit();

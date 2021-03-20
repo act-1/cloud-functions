@@ -1,5 +1,5 @@
 import * as functions from 'firebase-functions';
-import admin, { firestore } from 'firebase-admin';
+import admin, { database, firestore } from 'firebase-admin';
 
 const bucket = admin.storage().bucket();
 
@@ -82,6 +82,20 @@ export const unlikePost = functions.https.onCall(async (data, context) => {
     return { updated: true, action: 'unlike' };
   } catch (err) {
     throw new functions.https.HttpsError('not-found', err.message);
+  }
+});
+
+export const onPostCreatin = functions.firestore.document('posts/{postId}').onCreate(async (snap, context) => {
+  const postData = snap.data();
+  if (postData.type === 'picture' && postData.locationId) {
+    // Add to realtime location node
+    const locationRef = database().ref('locations').child(postData.locationId).child('recentPictures');
+
+    locationRef.once('value', (snapshot) => {
+      const recentPictures = snapshot.val();
+      if (!recentPictures) return snapshot.ref.set([{ postData }]);
+      return snapshot.ref.set([{ postData }, ...recentPictures.slice(0, 2)]);
+    });
   }
 });
 

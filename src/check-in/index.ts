@@ -4,16 +4,19 @@ import { firestore, database } from 'firebase-admin';
 exports.onCheckIn = functions.firestore.document('checkIns/{docId}').onCreate(async (snap, context) => {
   try {
     const checkInData = snap.data();
-
-    const { region } = checkInData;
+    console.log(checkInData);
+    const { locationId, locationRegion } = checkInData;
 
     // Update stats.
 
-    await database().ref('regionCounter').child(region).set(database.ServerValue.increment(1));
+    await database().ref('locationCounter').child(locationId).set(database.ServerValue.increment(1));
+    await database().ref('regionCounter').child(locationRegion).set(database.ServerValue.increment(1));
     await database().ref('totalCounter').set(database.ServerValue.increment(1));
 
     // Log for future stats
-    await firestore().collection('checkInLogger').add({ region, createdAt: firestore.FieldValue.serverTimestamp() });
+    await firestore()
+      .collection('checkInLogger')
+      .add({ locationId, locationRegion, createdAt: firestore.FieldValue.serverTimestamp() });
   } catch (err) {
     console.error(err);
     throw err;
@@ -25,14 +28,21 @@ exports.onCheckInUpdate = functions.firestore.document('checkIns/{docId}').onUpd
     const before = change.before.data();
     const after = change.after.data();
 
-    if (before.region !== after.region) {
-      await database().ref('regionCounter').child(before.region).set(database.ServerValue.increment(-1));
-      await database().ref('regionCounter').child(after.region).set(database.ServerValue.increment(1));
+    if (before.locationRegion !== after.locationRegion) {
+      await database().ref('regionCounter').child(before.locationRegion).set(database.ServerValue.increment(-1));
+      await database().ref('regionCounter').child(after.locationRegion).set(database.ServerValue.increment(1));
+    }
+
+    if (before.locationId !== after.locationId) {
+      await database().ref('locationCounter').child(before.locationId).set(database.ServerValue.increment(-1));
+      await database().ref('locationCounter').child(after.locationId).set(database.ServerValue.increment(1));
 
       // Log for future stats
-      await firestore()
-        .collection('checkInLogger')
-        .add({ region: after.region, createdAt: firestore.FieldValue.serverTimestamp() });
+      await firestore().collection('checkInLogger').add({
+        locationId: after.locationId,
+        locationRegion: after.locationRegion,
+        createdAt: firestore.FieldValue.serverTimestamp(),
+      });
     }
   } catch (err) {
     console.error(err);
@@ -44,8 +54,48 @@ exports.onCheckInDelete = functions.firestore.document('checkIns/{docId}').onDel
   try {
     const checkInData = snap.data();
 
-    await database().ref('regionCounter').child(checkInData.region).set(database.ServerValue.increment(-1));
-    await database().ref('regionCounter').set(database.ServerValue.increment(-1));
+    await database().ref('locationCounter').child(checkInData.locationId).set(database.ServerValue.increment(-1));
+    await database().ref('regionCounter').child(checkInData.locationRegion).set(database.ServerValue.increment(-1));
+    await database().ref('totalCounter').set(database.ServerValue.increment(-1));
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
+});
+
+async function updateCheckInCount() {
+  try {
+    // Limiting to 500 documents because of batch commit limits.
+    const checkInSnapshots = await firestore()
+      .collection('checkIns')
+      .where('expireAt', '<', new Date())
+      .limit(500)
+      .get();
+
+    // Remove check in documents.
+    // The document's delete trigger event will handle counter updates.
+    const batch = firestore().batch();
+    checkInSnapshots.forEach((checkIn) => {
+      batch.delete(checkIn.ref);
+    });
+
+    return batch.commit();
+  } catch (err) {
+    throw err;
+  }
+}
+
+exports.updateCheckInCountManually = functions.https.onCall(async (data, context) => {
+  try {
+    return updateCheckInCount();
+  } catch (err) {
+    throw err;
+  }
+});
+
+exports.updateCheckInCount = functions.pubsub.schedule('every 60 minutes').onRun(async (context) => {
+  try {
+    return updateCheckInCount();
   } catch (err) {
     console.error(err);
     throw err;

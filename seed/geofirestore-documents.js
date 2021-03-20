@@ -5,10 +5,11 @@ const in5Hours = new Date();
 in5Hours.setHours(now.getHours() + 5);
 
 module.exports = {
-  regions: [
+  locations: [
     {
-      id: 'jerusalem',
-      name: 'ירושלים',
+      id: 'balfur',
+      name: 'כיכר פריז',
+      isActive: true,
       coordinates: new firestore.GeoPoint(31.774979, 35.217181),
     },
   ],
@@ -70,10 +71,23 @@ module.exports = {
     {
       archived: false,
       authorId: 'd8GSM5GdfuW0KDlH7dy8oqd5ngz1',
-      authorName: 'Guy',
-      authorPicture:
-        'https://firebasestorage.googleapis.com/v0/b/act1-dev.appspot.com/o/profilePictures%2Fd8GSM5GdfuW0KDlH7dy8oqd5ngz1%2FaVQWeyiBDi.jpg?alt=media&token=b4350a20-1abd-4cb0-a303-8595775b794c',
-      blurhash: 'LXFXeO%0NHjb~9%1RkRkxtxZWBRk',
+      featured: true,
+      id: 'ewdsadsad',
+      likeCounter: 0,
+      locationName: '',
+      pictureHeight: 1440,
+      pictureUrl: 'https://res.cloudinary.com/act1/image/upload/v1614841195/featured_pictures/purimistors.jpg',
+      pictureWidth: 1920,
+      text: '',
+      type: 'picture',
+      locationId: 'balfur',
+      coordinates: new firestore.GeoPoint(31.775077, 35.217622),
+      createdAt: firestore.FieldValue.serverTimestamp(),
+      updatedAt: firestore.FieldValue.serverTimestamp(),
+    },
+    {
+      archived: false,
+      authorId: 'd8GSM5GdfuW0KDlH7dy8oqd5ngz1',
       featured: true,
       id: 'K0HjtO1bOAGg24ZrrGcN',
       likeCounter: 0,
@@ -84,6 +98,7 @@ module.exports = {
       pictureWidth: 1920,
       text: '',
       type: 'picture',
+      locationId: 'habima-square',
       coordinates: new firestore.GeoPoint(31.775077, 35.217622),
       createdAt: firestore.FieldValue.serverTimestamp(),
       updatedAt: firestore.FieldValue.serverTimestamp(),

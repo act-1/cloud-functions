@@ -5,27 +5,11 @@ const in5Hours = new Date();
 in5Hours.setHours(now.getHours() + 5);
 
 module.exports = {
-  locations: [
+  regions: [
     {
-      id: 'balfur',
-      name: 'כיכר פריז',
-      city: 'ירושלים',
-      province: 'ירושלים',
-      coordinates: new firestore.GeoPoint(31.775077, 35.217622),
-    },
-    {
-      id: 'nayot-junction-jerusalem',
-      name: 'צומת ניות',
-      city: 'ירושלים',
-      province: 'ירושלים',
-      coordinates: new firestore.GeoPoint(31.7670357, 35.2046522),
-    },
-    {
-      id: 'habima-square',
-      name: 'כיכר הבימה',
-      city: 'תל אביב',
-      province: 'תל אביב',
-      coordinates: new firestore.GeoPoint(32.072384, 34.779377),
+      id: 'jerusalem',
+      name: 'ירושלים',
+      coordinates: new firestore.GeoPoint(31.774979, 35.217181),
     },
   ],
   events: [
@@ -52,7 +36,7 @@ module.exports = {
           id: 'kumi',
         },
       ],
-      pastEvent: false,
+      status: 'upcoming',
     },
     {
       id: 'stop-the-transfer',
@@ -78,7 +62,7 @@ module.exports = {
           id: 'kumi',
         },
       ],
-      pastEvent: false,
+      status: 'upcoming',
       createdAt: firestore.FieldValue.serverTimestamp(),
     },
   ],

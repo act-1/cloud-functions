@@ -4,8 +4,6 @@ import { firestore, storage } from 'firebase-admin';
 export const onUserCreation = functions.auth.user().onCreate(async (user) => {
   const isAnonymous = user.providerData.length === 0;
   let displayName = 'אנונימי/ת';
-  let profilePicture =
-    'https://res.cloudinary.com/act1/image/upload/v1610881280/profile_pictures/account-placeholder.png';
 
   if (!isAnonymous) {
     displayName = user.providerData[0].displayName || displayName;
@@ -20,7 +18,6 @@ export const onUserCreation = functions.auth.user().onCreate(async (user) => {
         id: userDoc.id,
         isAnonymous,
         displayName,
-        profilePicture,
         signupCompleted: false,
         createdAt: firestore.FieldValue.serverTimestamp(),
       });

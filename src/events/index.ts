@@ -12,7 +12,12 @@ exports.updatePastEvents = functions.pubsub.schedule('every 60 minutes').onRun(a
       .where('endDate', '<', new Date())
       .get();
 
-    const updates = pastEventsSnapshot.docs.map((event) => event.ref.update({ status: 'past' }));
+    // Sum up protesters count and update event status
+    const updates = pastEventsSnapshot.docs.map(async (event) => {
+      const snapshot = await firestore().collection('checkInLogger').where('eventId', '==', event.id).get();
+      return event.ref.update({ status: 'past', protestersCount: snapshot.docs.length });
+    });
+
     await Promise.all(updates);
 
     return true;

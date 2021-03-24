@@ -85,16 +85,21 @@ export const unlikePost = functions.https.onCall(async (data, context) => {
   }
 });
 
-export const onPostCreatin = functions.firestore.document('posts/{postId}').onCreate(async (snap, context) => {
+export const onPostCreation = functions.firestore.document('posts/{postId}').onCreate(async (snap, context) => {
   const postData = snap.data();
   if (postData.type === 'picture' && postData.locationId) {
     // Add to realtime location node
     const locationRef = database().ref('locations').child(postData.locationId).child('recentPictures');
 
+    const realtimePostData = {
+      pictureUrl: postData.pictureUrl,
+      createdAt: Date.now(),
+    };
+
     locationRef.once('value', (snapshot) => {
       const recentPictures = snapshot.val();
-      if (!recentPictures) return snapshot.ref.set([{ postData }]);
-      return snapshot.ref.set([{ postData }, ...recentPictures.slice(0, 2)]);
+      if (!recentPictures) return snapshot.ref.set([realtimePostData]);
+      return snapshot.ref.set([realtimePostData, ...recentPictures.slice(0, 3)]);
     });
   }
 });

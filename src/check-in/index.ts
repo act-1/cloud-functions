@@ -5,18 +5,18 @@ exports.onCheckIn = functions.firestore.document('checkIns/{docId}').onCreate(as
   try {
     const checkInData = snap.data();
     console.log(checkInData);
-    const { locationId, locationRegion } = checkInData;
+    const { locationId, locationRegion, eventId } = checkInData;
 
     // Update stats.
 
-    await database().ref('locationCounter').child(locationId).set(database.ServerValue.increment(1));
-    await database().ref('regionCounter').child(locationRegion).set(database.ServerValue.increment(1));
+    await database().ref('locations').child(locationId).child('counter').set(database.ServerValue.increment(1));
+    await database().ref('regions').child(locationRegion).child('counter').set(database.ServerValue.increment(1));
     await database().ref('totalCounter').set(database.ServerValue.increment(1));
 
     // Log for future stats
     await firestore()
       .collection('checkInLogger')
-      .add({ locationId, locationRegion, createdAt: firestore.FieldValue.serverTimestamp() });
+      .add({ locationId, locationRegion, createdAt: firestore.FieldValue.serverTimestamp(), eventId: eventId || null });
   } catch (err) {
     console.error(err);
     throw err;
@@ -29,13 +29,13 @@ exports.onCheckInUpdate = functions.firestore.document('checkIns/{docId}').onUpd
     const after = change.after.data();
 
     if (before.locationRegion !== after.locationRegion) {
-      await database().ref('regionCounter').child(before.locationRegion).set(database.ServerValue.increment(-1));
-      await database().ref('regionCounter').child(after.locationRegion).set(database.ServerValue.increment(1));
+      await database().ref('regions').child(before.locationRegion).child('counter').set(database.ServerValue.increment(-1));
+      await database().ref('regions').child(after.locationRegion).child('counter').set(database.ServerValue.increment(1));
     }
 
     if (before.locationId !== after.locationId) {
-      await database().ref('locationCounter').child(before.locationId).set(database.ServerValue.increment(-1));
-      await database().ref('locationCounter').child(after.locationId).set(database.ServerValue.increment(1));
+      await database().ref('locations').child(before.locationId).child('counter').set(database.ServerValue.increment(-1));
+      await database().ref('locations').child(after.locationId).child('counter').set(database.ServerValue.increment(1));
 
       // Log for future stats
       await firestore().collection('checkInLogger').add({
@@ -54,8 +54,8 @@ exports.onCheckInDelete = functions.firestore.document('checkIns/{docId}').onDel
   try {
     const checkInData = snap.data();
 
-    await database().ref('locationCounter').child(checkInData.locationId).set(database.ServerValue.increment(-1));
-    await database().ref('regionCounter').child(checkInData.locationRegion).set(database.ServerValue.increment(-1));
+    await database().ref('locations').child(checkInData.locationId).child('counter').set(database.ServerValue.increment(-1));
+    await database().ref('regions').child(checkInData.locationRegion).child('counter').set(database.ServerValue.increment(-1));
     await database().ref('totalCounter').set(database.ServerValue.increment(-1));
   } catch (err) {
     console.error(err);
@@ -66,11 +66,7 @@ exports.onCheckInDelete = functions.firestore.document('checkIns/{docId}').onDel
 async function updateCheckInCount() {
   try {
     // Limiting to 500 documents because of batch commit limits.
-    const checkInSnapshots = await firestore()
-      .collection('checkIns')
-      .where('expireAt', '<', new Date())
-      .limit(500)
-      .get();
+    const checkInSnapshots = await firestore().collection('checkIns').where('expireAt', '<', new Date()).limit(500).get();
 
     // Remove check in documents.
     // The document's delete trigger event will handle counter updates.
